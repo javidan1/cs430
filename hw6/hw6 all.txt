@@ -1,0 +1,104 @@
+CREATE TABLE Movies (
+  mid number(9) PRIMARY KEY,
+  title varchar(20),
+  director varchar(20),
+  studio varchar(20),
+  releaseyear number(4)
+);
+CREATE TABLE Customers (
+  cid number(9) PRIMARY KEY,
+  name varchar(20),
+  city varchar(20),
+  state varchar(20),
+  age REAL,
+  CHECK (age >= 18)
+);
+CREATE TABLE Watch (
+  cid varchar(20),
+  mid varchar(20),
+  watchedon DATE,
+  PRIMARY KEY (cid, mid),
+  FOREIGN KEY (cid) REFERENCES Customers(cid),
+  FOREIGN KEY (mid) REFERENCES Movies(mid)
+);
+CREATE INDEX indexWatchDate ON Watch (watchedon);
+INSERT INTO Movies (mid, title, director, studio, releaseyear) VALUES (1, 'Interstellar', 'Nolan', 'Syncopy', 2014);
+
+INSERT INTO Customers (cid, name, city, state, age) VALUES (2, 'Javidan', 'Newton', 'MA', 22);
+
+INSERT INTO Watch (cid, mid, watchedon) VALUES (1, 1, TO_DATE('14/11/2022', 'mm/dd/yyyy'));
+
+SELECT DISTINCT mid, title
+FROM Movies
+INNER JOIN Watch
+ON Movies.mid = Watch.mid
+WHERE watchedon BETWEEN TO_DATE('01/01/2022', 'mm/dd/yyy') AND TO_DATE('07/31/2022', 'mm/dd/yyy');
+
+SELECT Customers.cid, Customers.name, Movies.mid, Movies.title, Movies.director, Watch.watchedon
+FROM Customers
+INNER JOIN Watch
+ON Customers.cid = Watch.cid
+INNER JOIN Movies
+ON Watch.mid = Movies.mid
+ORDER BY Watch.watchedon DESC;
+
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class OracleDBExample {
+  public static void main(String[] args) {
+    // Read Oracle DB credentials from input
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Enter Oracle username: ");
+    String username = scanner.nextLine();
+    System.out.print("Enter Oracle password: ");
+    String password = scanner.nextLine();
+    System.out.print("Enter Oracle hostname: ");
+    String hostname = scanner.nextLine();
+    System.out.print("Enter Oracle db name: ");
+    String dbName = scanner.nextLine();
+
+    // Connect to Oracle DB
+    try (Connection connection = DriverManager.getConnection(
+        "jdbc:oracle:thin:@" + hostname + ":1521:" + dbName, username, password)) {
+
+      // Extract all information about Customers
+      Statement statement = connection.createStatement();
+      ResultSet resultSet = statement.executeQuery("SELECT * FROM Customers");
+      while (resultSet.next()) {
+        System.out.println("ID: " + resultSet.getInt("cid")
+            + ", Name: " + resultSet.getString("name")
+            + ", City: " + resultSet.getString("city")
+            + ", State: " + resultSet.getString("state")
+            + ", Age: " + resultSet.getDouble("age"));
+      }
+
+      // Extract the id and name of Customers and the id and title of Movies they watched
+      resultSet = statement.executeQuery(
+          "SELECT Customers.cid, Customers.name, Movies.mid, Movies.title, Watch.watchedon"
+          + " FROM Customers"
+          + " INNER JOIN Watch"
+          + " ON Customers.cid = Watch.cid"
+          + " INNER JOIN Movies"
+          + " ON Watch.mid = Movies.mid");
+      while (resultSet.next()) {
+        System.out.println("Customer ID: " + resultSet.getInt("cid")
+            + ", Customer Name: " + resultSet.getString("name")
+            + ", Movie ID: " + resultSet.getInt("mid")
+            + ", Movie Title: " + resultSet.getString("title")
+            + ", Watched on: " + resultSet.getDate("watchedon"));
+      }
+
+      // Find out how many movies are in the DB
+      resultSet = statement.executeQuery("SELECT COUNT(*) AS movie_count FROM Movies");
+      if (resultSet.next()) {
+        System.out.println("Number of movies: " + resultSet.getInt("movie_count"));
+      }
+
+      // Extract metadata for table Customers
+      resultSet = connection.getMetaData().getTables(null, null, "CUSTOMERS", null);
+      while (resultSet.next()) {
+        System.out.println("Table: " + resultSet.getString("TABLE_NAME"));
+        System.out.println("Type: " + resultSet.getString("TABLE_TYPE"));
+        System.out.println("Catalog: " + resultSet.getString("TABLE_CAT"));

@@ -1,0 +1,15 @@
+a) The ER diagram for the database described in the question statement is shown below:
+
+[Student(sid:integer, sname:string, dob:date, phone:string, city:string)]<-[Rent]->[Article(aid:integer, title:string, author:string, pubyear:integer)]
+
+b) To add the constraint that each student must rent at least one article, we can modify the ER diagram as follows:
+
+[Student(sid:integer, sname:string, dob:date, phone:string, city:string)]<-[1..*]->[Article(aid:integer, title:string, author:string, pubyear:integer)]
+
+This means that each student must rent at least one article, and each article can be rented by multiple students.
+
+c) The db schema for the modified ER diagram is shown below:
+
+Students(sid:integer, sname:string, dob:date, phone:string, city:string)
+Articles(aid:integer, title:string, author:string, pubyear:integer)
+Rent(sid:integer, aid:integer, FOREIGN KEY(sid) REFERENCES Students(sid), FOREIGN KEY(aid) REFERENCES Articles(aid))
